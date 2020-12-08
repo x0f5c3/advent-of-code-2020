@@ -9,6 +9,7 @@ edition = "2018"
 reqwest = { version = "*", features = ["rustls-tls", "gzip", "blocking"] }
 config = { version = "*", features = ["toml"] }
 clap = "*"
+anyhow = "*"
 
 [workspace]
 members = [
