@@ -1,53 +1,47 @@
 
-#[macro_use]
-extern crate clap;
 use std::path::PathBuf;
-
+use structopt::StructOpt;
+use thiserror::Error;
 pub mod website;
 pub mod config;
+pub mod input;
+#[derive(Debug, StructOpt)]
+enum Opt {
+    Init {
+        #[structopt(short, long)]
+        cookie: String,
+        #[structopt(short, long, parse(from_os_str))]
+        input_dir: Option<PathBuf>
+    },
+    Download {
+        #[structopt(short, long)]
+        day: u8
+    }
+}
 
 
-fn main() -> Result<(), config::Error>{
-    let matches = clap_app!(day_1 =>
-        (version: "0.1")
-        (author: "x0f5c3 <x0f5c3@tutanota.com>")
-        (about: "Solutions to day 1 of AoC")
-        (@subcommand cookie =>
-            (about: "Set cookie")
-            (@arg cookie: +required -c --cookie "Add session key")
-        )
-        (@subcommand set_dir =>
-            (about: "Init configuration")
-            (@arg cookie: +required -c --cookie "Add session key")
-            (@arg dir: +required -d --dir "Add input dir")
-        )
-    ).get_matches();
-    match matches.subcommand_name() {
-        Some("cookie") => {
-            if let Some(session) = matches.subcommand_matches("cookie") {
-                if let Some(val) = session.value_of("cookie") {
-                    let config = config::Config {
-                        session: val.to_string(),
-                        input_files: None,
-                    };
-                    config.save()?;
-                }
-            }
+fn main() -> Result<(), Error>{
+    let opt = Opt::from_args();
+    match opt {
+        Opt::Init{cookie, input_dir} => {
+            let config = config::Config {
+                session: cookie,
+                input_files: input_dir
+            };
+            config.save()?;
         },
-        Some("set_dir") => {
-            if let Some(setit) = matches.subcommand_matches("set_dir") {
-                if let Some(cookie) = setit.value_of("cookie") {
-                    if let Some(dire) = setit.value_of("dir") {
-                        let config = config::Config {
-                            session: cookie.to_string(),
-                            input_files: Some(PathBuf::from(dire))
-                        };
-                        config.save()?;
-                    }
-                }
-            }
-        },
-        _ => {},
+        Opt::Download{day} => {
+            let config = config::Config::load()?;
+            website::get_input(&config, day)?;
+        } 
     }
     Ok(())
+}
+
+#[derive(Debug, Error)]
+enum Error {
+    #[error(transparent)]
+    Config(#[from] config::Error),
+    #[error(transparent)]
+    Website(#[from] website::Error),
 }

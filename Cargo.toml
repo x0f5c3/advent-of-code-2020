@@ -7,12 +7,12 @@ edition = "2018"
 
 [dependencies]
 reqwest = { version = "*", features = ["rustls-tls", "gzip", "blocking"] }
-clap = "*"
 anyhow = "*"
 serde = { version = "1.0.118", features = ["derive"] }
 toml = "*"
 thiserror = "1.0.22"
 dirs = "*"
+structopt = "*"
 
 [workspace]
 members = [
